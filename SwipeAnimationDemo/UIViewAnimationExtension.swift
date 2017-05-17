@@ -28,7 +28,7 @@ public extension UIView {
     // TODO: is missing to correct cornerRadius property duiring animation
     public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
         let originalFrame = frame ?? self.frame
-        
+
         UIView.animate(withDuration: 2.0,
                        animations: { [unowned self] in
                             // TODO: this should be update if the logic is migrated to use beziers paths
@@ -39,7 +39,7 @@ public extension UIView {
                             self.layer.borderWidth = 0.0
                             self.layer.cornerRadius = 0.0
                             firstHandler?()
-                            self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler) // TODO: Here should appear the text too.
+                            self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler)
                         })
     }
     
@@ -112,6 +112,15 @@ public extension UIView {
                                            animations: { [unowned self] in self.alpha = 0.0 })
         })
     }
+    
+    public func testAnimation() {
+        let animationGroup = CAAnimationGroup()
+        animationGroup.animations = [positionAnimation, cornerRadiusAnimation, sizeAnimation]
+        animationGroup.duration = 2.0
+        animationGroup.fillMode = kCAFillModeForwards;
+        animationGroup.isRemovedOnCompletion = false
+        layer.add(animationGroup, forKey: "bigger")
+    }
 }
 
 fileprivate extension UIView {
@@ -149,23 +158,30 @@ fileprivate extension UIView {
     }
     
 }
-//
-//fileprivate extension UIView {
-//    
-//    fileprivate var cornerRadiusAnimation: CAAnimation {
-//        let position = CAKeyframeAnimation();
-//        position.keyPath = "position";
-//        position.values = [frame.origin, ]
-//    }
-//    
-//    fileprivate var positionAnimation: CAAnimation {
-//        let position = CAKeyframeAnimation();
-//        position.keyPath = "position";
-//        position.values = [frame.origin, ]
-//        return position
-//    }
-//    
-//    fileprivate var sizeAnimation: CAAnimation {
-//        let animation = CABasicAnimation()
-//    }
-//}
+
+fileprivate extension UIView {
+    
+    fileprivate var cornerRadiusAnimation: CAAnimation {
+        let animation = CABasicAnimation();
+        animation.keyPath = "cornerRadius";
+        animation.fromValue = layer.cornerRadius
+        animation.toValue = screenHeight/2
+        return animation
+    }
+    
+    fileprivate var positionAnimation: CAAnimation {
+        let size = CABasicAnimation()
+        size.keyPath = "bounds.origin"
+        size.fromValue = frame.origin
+        size.toValue = CGPoint(x: -screenHeight/2, y: 0.0)
+        return size
+    }
+    
+    fileprivate var sizeAnimation: CAAnimation {
+        let size = CABasicAnimation()
+        size.keyPath = "bounds.size"
+        size.fromValue = frame.size
+        size.toValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
+        return size
+    }
+}

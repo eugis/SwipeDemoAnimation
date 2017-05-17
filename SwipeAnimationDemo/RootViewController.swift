@@ -18,6 +18,8 @@ class RootViewController: UIViewController {
     @IBOutlet weak var rightViewAlertLabel: UILabel!
     // TODO: is missing to add leftLabel
     
+    @IBOutlet weak var animateRoundedButton: UIButton!
+    @IBOutlet weak var restartButton: UIButton!
     fileprivate var _pageViewController: UIPageViewController?
     fileprivate var _monthsViewModel: MonthsViewModel? = .none
     
@@ -41,6 +43,17 @@ class RootViewController: UIViewController {
     }
     func initializeViewModel() {
         _monthsViewModel = MonthsViewModel()
+    }
+    
+    @IBAction func reset(_ sender: Any) {
+        rightArrowView.layer.removeAllAnimations()
+        rightArrowView.frame = _originRightArrowViewPosition
+        rightArrowView.layer.cornerRadius = rightArrowView.frame.size.height / 2
+        //        leftArrowView = _originLeftArrowViewPosition
+    }
+    
+    @IBAction func animateRadius(_ sender: Any) {
+        rightArrowView.testAnimation()
     }
 }
 
@@ -80,6 +93,9 @@ extension RootViewController {
 //        view.bringSubview(toFront: leftArrowView)
         
         rightViewAlertLabel.text = _monthsViewModel?.alertMessage
+        
+        view.bringSubview(toFront: restartButton)
+        view.bringSubview(toFront: animateRoundedButton)
     }
     
     internal func initializeGestures() {
@@ -168,12 +184,12 @@ fileprivate extension RootViewController {
         let direction: Direction = viewBeingAnimated == rightArrowView ? .right : .left
         let frame = viewBeingAnimated == rightArrowView ? _originRightArrowViewPosition : _originLeftArrowViewPosition
         let complementaryView = viewBeingAnimated == rightArrowView ? rightArrowView : rightArrowView // TODO: update this
-        _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!) { [unowned self] _ in
+        _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!, firstHandler: { [unowned self] _ in
             self.animateAndUpdate(direction: direction)
 //            complementaryView!.alpha = 1.0
 //            self._viewBeingAnimated!.frame = self._originRightArrowViewPosition // TODO: this should using the origin frame, from the view being animated
 //            self._viewBeingAnimated!.fadeInAnimation(toShow: true)
-        }
+        })
     }
     
     fileprivate func animateAndUpdate(direction: Direction) {

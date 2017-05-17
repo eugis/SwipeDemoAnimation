@@ -39,7 +39,7 @@
                                     <constraint firstAttribute="width" constant="100" id="bSN-0x-MyM"/>
                                 </constraints>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7rw-jB-AJb">
+                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7rw-jB-AJb">
                                 <rect key="frame" x="-50" y="282" width="100" height="102"/>
                                 <color key="backgroundColor" red="1" green="0.2541619571" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
@@ -47,12 +47,44 @@
                                     <constraint firstAttribute="width" constant="100" id="Y2M-Kl-Lq9"/>
                                 </constraints>
                             </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ixs-si-VIp">
+                                <rect key="frame" x="20" y="619" width="110" height="40"/>
+                                <color key="backgroundColor" red="0.0039215686269999999" green="0.65098039220000004" blue="0.94117647059999998" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="1DC-Tw-3Cx"/>
+                                    <constraint firstAttribute="width" constant="110" id="dmn-zg-72L"/>
+                                </constraints>
+                                <state key="normal" title="Restart">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="reset:" destination="703-4V-yAM" eventType="touchUpInside" id="LrT-SY-F4c"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7eu-sQ-Wab">
+                                <rect key="frame" x="245" y="619" width="110" height="40"/>
+                                <color key="backgroundColor" red="0.0039215686274509803" green="0.65098039215686276" blue="0.94117647058823528" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="4tU-JO-KWG"/>
+                                    <constraint firstAttribute="width" constant="110" id="sk5-xq-kn0"/>
+                                </constraints>
+                                <state key="normal" title="Animate curve">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="animateRadius:" destination="703-4V-yAM" eventType="touchUpInside" id="B9M-bk-4st"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="0.0" green="0.6588235294117647" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <gestureRecognizers/>
                         <constraints>
+                            <constraint firstItem="Ixs-si-VIp" firstAttribute="leading" secondItem="502-Ir-ELC" secondAttribute="leading" constant="20" id="2LZ-5w-KaL"/>
+                            <constraint firstItem="IfR-02-kHw" firstAttribute="top" secondItem="7eu-sQ-Wab" secondAttribute="bottom" constant="8" id="ED7-WH-c5s"/>
+                            <constraint firstAttribute="trailing" secondItem="7eu-sQ-Wab" secondAttribute="trailing" constant="20" id="GLP-K8-vb8"/>
                             <constraint firstItem="LU7-Gb-rSZ" firstAttribute="centerY" secondItem="502-Ir-ELC" secondAttribute="centerY" id="aBZ-0p-c3h"/>
                             <constraint firstAttribute="trailing" secondItem="LU7-Gb-rSZ" secondAttribute="centerX" id="aIW-q7-GQA"/>
+                            <constraint firstItem="IfR-02-kHw" firstAttribute="top" secondItem="Ixs-si-VIp" secondAttribute="bottom" constant="8" id="poh-Gj-6kJ"/>
                             <constraint firstItem="7rw-jB-AJb" firstAttribute="centerX" secondItem="502-Ir-ELC" secondAttribute="leading" id="xju-EQ-IbJ"/>
                             <constraint firstItem="7rw-jB-AJb" firstAttribute="centerY" secondItem="502-Ir-ELC" secondAttribute="centerY" id="y7S-iK-WsE"/>
                         </constraints>
@@ -61,7 +93,9 @@
                         </connections>
                     </view>
                     <connections>
+                        <outlet property="animateRoundedButton" destination="7eu-sQ-Wab" id="imA-k2-Nx4"/>
                         <outlet property="panGestureRecognizer" destination="KJp-H0-0Cr" id="zEY-yc-A8K"/>
+                        <outlet property="restartButton" destination="Ixs-si-VIp" id="md5-0c-g6J"/>
                         <outlet property="rightArrowView" destination="LU7-Gb-rSZ" id="bNn-gM-lzZ"/>
                         <outlet property="rightViewAlertLabel" destination="E32-tT-eaB" id="kj0-HE-trR"/>
                     </connections>
