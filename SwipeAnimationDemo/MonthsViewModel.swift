@@ -48,7 +48,7 @@ class MonthsViewModel: NSObject {
     }
     
     var alertMessage: String {
-        return "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        return "Lorem ipsum dolor sit amet\n consectetur adipiscing elit sed do eiusmod tempor\n\n incididunt ut labore et dolore magna aliqua."
     }
 }
 

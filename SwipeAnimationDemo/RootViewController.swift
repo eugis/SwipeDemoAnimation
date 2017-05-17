@@ -40,6 +40,8 @@ class RootViewController: UIViewController {
         super.viewDidAppear(animated)
         _originRightArrowViewPosition = rightArrowView.frame
         //            _originLeftArrowViewPosition = leftArrowView.frame
+        self.rightViewAlertLabel.alpha = 1;
+
     }
     func initializeViewModel() {
         _monthsViewModel = MonthsViewModel()
@@ -54,6 +56,10 @@ class RootViewController: UIViewController {
     
     @IBAction func animateRadius(_ sender: Any) {
         rightArrowView.testAnimation()
+        UIView.animate(withDuration: 6.0) {
+            self.rightViewAlertLabel.alpha = 1;
+            self.view.bringSubview(toFront: self.rightViewAlertLabel)
+        }
     }
 }
 
