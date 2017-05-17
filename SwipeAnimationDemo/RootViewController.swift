@@ -148,8 +148,8 @@ fileprivate extension RootViewController {
         let complementaryView = viewBeingAnimated == rightArrowView ? leftArrowView : rightArrowView
         _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!) { [unowned self] _ in
             let currentIndex = Int((self._monthsViewModel?.index(of: (self._pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
-            let index = UInt(currentIndex + (viewBeingAnimated == self.rightArrowView ? 1 : -1))
-            let nextController = self.viewControllerAtIndex(index)!
+//            let index = UInt(currentIndex + (viewBeingAnimated == self.rightArrowView ? 1 : -1))
+//            let nextController = self.viewControllerAtIndex(index)!
             self._pageViewController?.setViewControllers([nextController], direction: .forward, animated: false, completion: nil)
             complementaryView!.alpha = 1.0
             self._viewBeingAnimated!.frame = self._originRightArrowViewPosition
