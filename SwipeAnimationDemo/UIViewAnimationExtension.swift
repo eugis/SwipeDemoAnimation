@@ -21,32 +21,32 @@ public enum Direction: CGFloat {
     }
 }
 
-public typealias Handler = ((Bool) -> Void)
-
 public extension UIView {
+    
+    public typealias handler = ((Bool) -> Void)
 
     // TODO: is missing to correct cornerRadius property duiring animation
-    public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: @escaping ((Handler) -> Void), completionHandler: Handler? = .none) {
+    public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
         let originalFrame = frame ?? self.frame
         
-        UIView.animate(withDuration: 3.0,
+        UIView.animate(withDuration: 2.0,
                        animations: { [unowned self] in
-                            self.frame.origin = CGPoint(x: 0.0, y: 0.0)
-                            self.frame.size = CGSize(width: self.screenWidth, height: self.screenHeight)
-//                            self.layer.cornerRadius = self.frame.height / 2.0
+                            // TODO: this should be update if the logic is migrated to use beziers paths
+                            self.frame.origin = CGPoint(x: -self.screenHeight/2, y: 0.0)
+                            self.frame.size = CGSize(width: self.screenWidth + self.screenHeight, height: self.screenHeight)
                         },
                        completion: { [unowned self] _ in
                             self.layer.borderWidth = 0.0
                             self.layer.cornerRadius = 0.0
-                            firstHandler  { _ in
-                                self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler) // TODO: Here should appear the text too.
-                            }
+                            firstHandler?()
+                            self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler) // TODO: Here should appear the text too.
                         })
     }
     
-    public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: Handler? ) {
+    public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: handler? ) {
         let endPosition = getEndPosition(from: frame, with: direction)
-        UIView.animate(withDuration: 3.0,
+        UIView.animate(withDuration: 2.0,
+                       delay: 1.0,
                        animations: { [unowned self] in
                             self.frame.origin = endPosition
                             self.frame.size = frame.size
@@ -57,7 +57,7 @@ public extension UIView {
     }
     
     public func restaureSize(upTo frame: CGRect, completionHandler: ((Bool) -> Void)? ) {
-        UIView.animate(withDuration: 3.0,
+        UIView.animate(withDuration: 1.5,
                        animations: { [unowned self] in
                         self.frame = frame
                         self.layer.cornerRadius = self.frame.height / 2.0
@@ -77,7 +77,7 @@ public extension UIView {
     }
     
     // TODO: Check and update this function's style
-    public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, firstHandler: @escaping ((Handler) -> Void), completionHandler: Handler? = .none) {
+    public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
         guard xTranslation != 0 else { return }
 //        view.alpha = updatedAlpha(origin: frame.origin, xTranslation: xTranslation)
         let direction: Direction = xTranslation < 0 ? .left : .right
@@ -101,10 +101,15 @@ public extension UIView {
         })
     }
     
-    public func fadeInOutAnimation(handler: @escaping Handler) {
+    public func fadeInOutAnimation() {
         alpha = 0.0
-        UIView.animate(withDuration: 0.1, animations: { [unowned self] in self.alpha = 1.0 }, completion: { [unowned self] _ in
-            UIView.animate(withDuration: 0.1, delay: 0.1, options: .curveEaseIn, animations: { [unowned self] in self.alpha = 1.0 }, completion: handler)
+        UIView.animate(withDuration: 0.1,
+                       animations: { [unowned self] in self.alpha = 1.0 },
+                       completion: { [unowned self] _ in
+                            UIView.animate(withDuration: 0.1,
+                                           delay: 1.5,
+                                           options: .curveEaseIn,
+                                           animations: { [unowned self] in self.alpha = 0.0 })
         })
     }
 }
@@ -142,4 +147,25 @@ fileprivate extension UIView {
 //        return alpha + 2 * CGFloat(multiplier) * xTranslation / screenWidth
         return 1.0
     }
+    
 }
+//
+//fileprivate extension UIView {
+//    
+//    fileprivate var cornerRadiusAnimation: CAAnimation {
+//        let position = CAKeyframeAnimation();
+//        position.keyPath = "position";
+//        position.values = [frame.origin, ]
+//    }
+//    
+//    fileprivate var positionAnimation: CAAnimation {
+//        let position = CAKeyframeAnimation();
+//        position.keyPath = "position";
+//        position.values = [frame.origin, ]
+//        return position
+//    }
+//    
+//    fileprivate var sizeAnimation: CAAnimation {
+//        let animation = CABasicAnimation()
+//    }
+//}
