@@ -73,7 +73,7 @@ public extension UIView {
     
     var screenHeight: CGFloat {
         let screenRect = UIScreen.main.bounds
-        return screenRect.size.height
+        return screenRect.size.height * 2
     }
     
     // TODO: Check and update this function's style
@@ -83,6 +83,8 @@ public extension UIView {
         let direction: Direction = xTranslation < 0 ? .left : .right
         var newSize = updatedSize(origin: frame.origin, xTranslation: xTranslation)
         let newPosition = updatedPosition(origin: frame.origin, newSize: newSize, with: direction)
+        
+        print("translation: \(xTranslation) - size: \(newSize) - position: \(newPosition)")
         
         if shouldCompleteAnimation(from: frame.origin, to: newPosition, with: direction) {
             animateBigger(from: frame, with: direction, firstHandler: firstHandler, completionHandler: completionHandler)
@@ -133,7 +135,7 @@ fileprivate extension UIView {
     fileprivate func updatedPosition(origin: CGPoint, newSize: CGSize, with direction: Direction) -> CGPoint {
         let y = (screenHeight - abs(newSize.height)) / 2.0
         let multiplier = origin.x.sign()
-        return CGPoint(x: frame.origin.x + CGFloat(multiplier) * direction.rawValue * (abs(newSize.width) - frame.size.width) / 2, y: y)
+        return CGPoint(x: frame.origin.x + CGFloat(multiplier) * (frame.size.width - abs(newSize.width)) / 2, y: y) // TODO: check this when having 2 arrows
     }
     
     fileprivate func updatedSize(origin: CGPoint, xTranslation: CGFloat) -> CGSize {
@@ -184,4 +186,14 @@ fileprivate extension UIView {
         size.toValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
         return size
     }
+    
+    
+    fileprivate var sizeAnimation: CAAnimation {
+        let size = CABasicAnimation()
+        size.keyPath = "bounds.size"
+        size.fromValue = frame.size
+        size.toValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
+        return size
+    }
+
 }

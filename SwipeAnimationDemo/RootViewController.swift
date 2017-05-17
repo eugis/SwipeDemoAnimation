@@ -184,12 +184,13 @@ fileprivate extension RootViewController {
         let direction: Direction = viewBeingAnimated == rightArrowView ? .right : .left
         let frame = viewBeingAnimated == rightArrowView ? _originRightArrowViewPosition : _originLeftArrowViewPosition
         let complementaryView = viewBeingAnimated == rightArrowView ? rightArrowView : rightArrowView // TODO: update this
-        _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!, firstHandler: { [unowned self] _ in
-            self.animateAndUpdate(direction: direction)
+        _ = viewBeingAnimated.animateBigger(from: frame, with: direction, firstHandler: { [unowned self] in self.animateAndUpdate(direction: direction) })
+//        _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!, firstHandler: { [unowned self] _ in
+//            self.animateAndUpdate(direction: direction)
 //            complementaryView!.alpha = 1.0
 //            self._viewBeingAnimated!.frame = self._originRightArrowViewPosition // TODO: this should using the origin frame, from the view being animated
 //            self._viewBeingAnimated!.fadeInAnimation(toShow: true)
-        })
+//        })
     }
     
     fileprivate func animateAndUpdate(direction: Direction) {
@@ -210,8 +211,6 @@ fileprivate extension RootViewController {
     
     fileprivate func animateText(with direction: Direction) {
         if let view = direction == .left ? rightViewAlertLabel : rightViewAlertLabel { // TODO: this should be updated to use leftlabel too
-//            view.center = view.superview!.center;
-//            view.layoutIfNeeded()
             view.fadeInOutAnimation()
         }
     }
