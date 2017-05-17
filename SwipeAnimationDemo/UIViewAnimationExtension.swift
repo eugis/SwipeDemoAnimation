@@ -12,12 +12,21 @@ import UIKit
 public enum Direction: CGFloat {
     case left = -1.0
     case right = 1.0
+    
+    var oposite: Direction {
+        switch self {
+        case .left: return .right
+        case .right: return .left
+        }
+    }
 }
 
 public extension UIView {
+    
+    public typealias handler = ((Bool) -> Void)
 
     // TODO: is missing to correct cornerRadius property duiring animation
-    public func animateBigger(from frame: CGRect? = .none, with direction: Direction, completionHandler: ((Bool) -> Void)? = .none) {
+    public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
         let originalFrame = frame ?? self.frame
         
         UIView.animate(withDuration: 3.0,
@@ -26,15 +35,15 @@ public extension UIView {
                             self.frame.size = CGSize(width: self.screenWidth, height: self.screenHeight)
 //                            self.layer.cornerRadius = self.frame.height / 2.0
                         },
-                       completion: { [unowned self] in
+                       completion: { [unowned self] _ in
                             self.layer.borderWidth = 0.0
                             self.layer.cornerRadius = 0.0
-                            completionHandler?($0)
+                            firstHandler?()
                             self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler) // TODO: Here should appear the text too.
                         })
     }
     
-    public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: ((Bool) -> Void)? ) {
+    public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: handler? ) {
         let endPosition = getEndPosition(from: frame, with: direction)
         UIView.animate(withDuration: 3.0,
                        animations: { [unowned self] in
@@ -67,9 +76,9 @@ public extension UIView {
     }
     
     // TODO: Check and update this function's style
-    public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, completionHandler: ((Bool) -> Void)? = .none) {
+    public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, completionHandler: handler? = .none) {
         guard xTranslation != 0 else { return }
-        view.alpha = updatedAlpha(origin: frame.origin, xTranslation: xTranslation)
+//        view.alpha = updatedAlpha(origin: frame.origin, xTranslation: xTranslation)
         let direction: Direction = xTranslation < 0 ? .left : .right
         var newSize = updatedSize(origin: frame.origin, xTranslation: xTranslation)
         let newPosition = updatedPosition(origin: frame.origin, newSize: newSize, with: direction)
@@ -85,10 +94,10 @@ public extension UIView {
     }
     
     public func fadeInAnimation(toShow: Bool) {
-        alpha = toShow ? 0.0 : 1.0
-        UIView.animate(withDuration: 0.5, animations: { [unowned self] in
-            self.alpha = toShow ? 1.0 : 0.0
-        })
+//        alpha = toShow ? 0.0 : 1.0
+//        UIView.animate(withDuration: 0.5, animations: { [unowned self] in
+//            self.alpha = toShow ? 1.0 : 0.0
+//        })
     }
 }
 
@@ -121,7 +130,8 @@ fileprivate extension UIView {
     
     // TODO: check. Alpha is 0 in the middle of the screen?
     fileprivate func updatedAlpha(origin: CGPoint, xTranslation: CGFloat) -> CGFloat {
-        let multiplier = origin.x.sign()
-        return alpha + 2 * CGFloat(multiplier) * xTranslation / screenWidth
+//        let multiplier = origin.x.sign()
+//        return alpha + 2 * CGFloat(multiplier) * xTranslation / screenWidth
+        return 1.0
     }
 }

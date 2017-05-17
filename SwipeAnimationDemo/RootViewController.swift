@@ -15,9 +15,12 @@ class RootViewController: UIViewController {
     @IBOutlet weak var rightArrowView: UIView!
     @IBOutlet weak var leftArrowView: UIView!
     
+    @IBOutlet weak var rightViewAlertLabel: UILabel!
+    // TODO: is missing to add leftLabel
+    
     fileprivate var _pageViewController: UIPageViewController?
     fileprivate var _monthsViewModel: MonthsViewModel? = .none
-
+    
     fileprivate var _originRightArrowViewPosition: CGRect!
     fileprivate var _originLeftArrowViewPosition: CGRect!
     
@@ -31,6 +34,11 @@ class RootViewController: UIViewController {
         initializeGestures()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        _originRightArrowViewPosition = rightArrowView.frame
+        //            _originLeftArrowViewPosition = leftArrowView.frame
+    }
     func initializeViewModel() {
         _monthsViewModel = MonthsViewModel()
     }
@@ -66,28 +74,23 @@ extension RootViewController {
         rightArrowView.layer.borderWidth = 2.0
         view.bringSubview(toFront: rightArrowView)
         
-        leftArrowView.layer.cornerRadius = rightArrowView.frame.height / 2
-        leftArrowView.layer.borderColor = UIColor.white.cgColor
-        leftArrowView.layer.borderWidth = 2.0
-        view.bringSubview(toFront: leftArrowView)
+//        leftArrowView.layer.cornerRadius = rightArrowView.frame.height / 2
+//        leftArrowView.layer.borderColor = UIColor.white.cgColor
+//        leftArrowView.layer.borderWidth = 2.0
+//        view.bringSubview(toFront: leftArrowView)
         
-        _originRightArrowViewPosition = rightArrowView.frame
-        _originLeftArrowViewPosition = leftArrowView.frame
     }
     
     internal func initializeGestures() {
         panGestureRecognizer.addTarget(self, action: #selector(handleDragGesture(gesture:)))
-    }
-}
-
-extension RootViewController: UIPageViewControllerDelegate, UIPageViewControllerDataSource {
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        return .none
-    }
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        return .none
+        
+        let rTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(gesture:)) )
+        rightArrowView.addGestureRecognizer(rTapGestureRecognizer)
+        
+//        let lTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(gesture:)) )
+//        leftArrowView.addGestureRecognizer(lTapGestureRecognizer)
+        
+        //TODO: add swipe gesture
     }
 }
 
@@ -95,7 +98,7 @@ fileprivate extension RootViewController {
     
     func viewControllerAtIndex(_ index: UInt) -> DataViewController? {
         
-        guard let month = _monthsViewModel?.element(at: UInt(index)) else { return .none }
+        guard let month = _monthsViewModel?.element(at: index) else { return .none }
         
         // Create a new view controller and pass suitable data.
         
@@ -114,47 +117,98 @@ fileprivate extension RootViewController {
 extension RootViewController {
     
     internal func handleDragGesture(gesture: UIPanGestureRecognizer) {
+        guard canAnimate() else { return }
         switch gesture.state {
         case .began:
-            guard rightArrowView.layer.animationKeys() == nil else { return }
             _viewBeingAnimated = .none
         case .changed:
             // TODO: verify code style
             let xTranslation = gesture.translation(in: gesture.view).x
+            let direction: Direction = xTranslation < 0 ? .right : .left
             if _viewBeingAnimated == .none {
+                guard isValid(direction: direction) else { return }
                 _viewBeingAnimated = xTranslation < 0 ? rightArrowView : leftArrowView
             }
             handleDragForArrow(with: xTranslation)
         case .ended:
-            guard rightArrowView.layer.animationKeys() == nil else { return }
             if (_originRightArrowViewPosition.size != rightArrowView.frame.size) {
                 rightArrowView.restaureSize(upTo: _originRightArrowViewPosition, completionHandler: .none)
             }
-            if (_originLeftArrowViewPosition.size != leftArrowView.frame.size) {
-                leftArrowView.restaureSize(upTo: _originLeftArrowViewPosition, completionHandler: .none)
-            }
+//            if (_originLeftArrowViewPosition.size != leftArrowView.frame.size) {
+//                leftArrowView.restaureSize(upTo: _originLeftArrowViewPosition, completionHandler: .none)
+//            }
             _viewBeingAnimated = .none
         default: break
         }
     }
     
+    internal func handleTapGesture(gesture: UITapGestureRecognizer) {
+        let direction: Direction = gesture.view == rightArrowView ? .right : .left
+        handleAnimation(with: direction)
+    }
+    
+    internal func handleSwipeGesture(gesture: UISwipeGestureRecognizer) {
+        let direction: Direction = gesture.direction == .right ? .right : .left
+        handleAnimation(with: direction)
+    }
+    
+    private func handleAnimation(with direction: Direction) {
+        guard canAnimate() else { return }
+        let viewToAnimate = direction == .right ? rightArrowView : leftArrowView
+        let originViewFrame = direction == .right ? _originRightArrowViewPosition : _originLeftArrowViewPosition
+        viewToAnimate!.animateBigger(from: originViewFrame, with: direction.oposite, firstHandler: { [unowned self] in self.animateAndUpdate(direction: direction) })
+    }
 }
 
 fileprivate extension RootViewController {
     
     fileprivate func handleDragForArrow(with xTranslation: CGFloat) {
         guard let viewBeingAnimated = _viewBeingAnimated else { return }
+        let direction: Direction = viewBeingAnimated == rightArrowView ? .right : .left
         let frame = viewBeingAnimated == rightArrowView ? _originRightArrowViewPosition : _originLeftArrowViewPosition
-        let complementaryView = viewBeingAnimated == rightArrowView ? leftArrowView : rightArrowView
+        let complementaryView = viewBeingAnimated == rightArrowView ? rightArrowView : rightArrowView // TODO: update this
         _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!) { [unowned self] _ in
-            let currentIndex = Int((self._monthsViewModel?.index(of: (self._pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
-//            let index = UInt(currentIndex + (viewBeingAnimated == self.rightArrowView ? 1 : -1))
-//            let nextController = self.viewControllerAtIndex(index)!
-            self._pageViewController?.setViewControllers([nextController], direction: .forward, animated: false, completion: nil)
-            complementaryView!.alpha = 1.0
-            self._viewBeingAnimated!.frame = self._originRightArrowViewPosition
-            self._viewBeingAnimated!.fadeInAnimation(toShow: true)
+            self.animateAndUpdate(direction: direction)
+//            complementaryView!.alpha = 1.0
+//            self._viewBeingAnimated!.frame = self._originRightArrowViewPosition // TODO: this should using the origin frame, from the view being animated
+//            self._viewBeingAnimated!.fadeInAnimation(toShow: true)
         }
     }
+    
+    fileprivate func animateAndUpdate(direction: Direction) {
+        let currentIndex = Int((_monthsViewModel?.index(of: (_pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
+        let index = UInt(currentIndex + Int(direction.rawValue))
+        let nextController = self.viewControllerAtIndex(index)!
+        self._pageViewController?.setViewControllers([nextController], direction: .forward, animated: false, completion: nil)
+        rightArrowView.isHidden = index == (_monthsViewModel!.elementsCount - 1)
+//        leftArrowView.isHidden = index == 0
+    }
+    
+    fileprivate func isValid(direction: Direction) -> Bool {
+        let currentIndex = Int((_monthsViewModel?.index(of: (_pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
+        let index = UInt(currentIndex + Int(direction.rawValue))
+        return _monthsViewModel!.isValid(index)
+    }
+    
+//    fileprivate func animateText(with direction: Direction) {
+//        let view = direction == .left ? 
+//    }
+    
+    fileprivate func canAnimate() -> Bool {
+        guard rightArrowView.layer.animationKeys() == nil else { return false }
+//        guard leftArrowView.layer.animationKeys() == nil else { return false }
+        return true
+    }
+    
 }
 
+extension RootViewController: UIPageViewControllerDelegate, UIPageViewControllerDataSource {
+    
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        return .none
+    }
+    
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        return .none
+    }
+}

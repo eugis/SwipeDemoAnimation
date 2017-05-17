@@ -42,5 +42,13 @@ class MonthsViewModel: NSObject {
         guard let index = _pageData.index(of: element) else { return .none }
         return UInt(index)
     }
+    
+    func isValid(_ index: UInt) -> Bool {
+        return index < elementsCount
+    }
+    
+    var alertMessage: String {
+        return "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    }
 }
 
