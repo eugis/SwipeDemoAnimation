@@ -21,12 +21,12 @@ public enum Direction: CGFloat {
     }
 }
 
+public typealias Handler = ((Bool) -> Void)
+
 public extension UIView {
-    
-    public typealias handler = ((Bool) -> Void)
 
     // TODO: is missing to correct cornerRadius property duiring animation
-    public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
+    public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: @escaping ((Handler) -> Void), completionHandler: Handler? = .none) {
         let originalFrame = frame ?? self.frame
         
         UIView.animate(withDuration: 3.0,
@@ -38,12 +38,13 @@ public extension UIView {
                        completion: { [unowned self] _ in
                             self.layer.borderWidth = 0.0
                             self.layer.cornerRadius = 0.0
-                            firstHandler?()
-                            self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler) // TODO: Here should appear the text too.
+                            firstHandler  { _ in
+                                self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler) // TODO: Here should appear the text too.
+                            }
                         })
     }
     
-    public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: handler? ) {
+    public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: Handler? ) {
         let endPosition = getEndPosition(from: frame, with: direction)
         UIView.animate(withDuration: 3.0,
                        animations: { [unowned self] in
@@ -76,7 +77,7 @@ public extension UIView {
     }
     
     // TODO: Check and update this function's style
-    public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, completionHandler: handler? = .none) {
+    public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, firstHandler: @escaping ((Handler) -> Void), completionHandler: Handler? = .none) {
         guard xTranslation != 0 else { return }
 //        view.alpha = updatedAlpha(origin: frame.origin, xTranslation: xTranslation)
         let direction: Direction = xTranslation < 0 ? .left : .right
@@ -84,7 +85,7 @@ public extension UIView {
         let newPosition = updatedPosition(origin: frame.origin, newSize: newSize, with: direction)
         
         if shouldCompleteAnimation(from: frame.origin, to: newPosition, with: direction) {
-            animateBigger(from: frame, with: direction, completionHandler: completionHandler)
+            animateBigger(from: frame, with: direction, firstHandler: firstHandler, completionHandler: completionHandler)
         } else {
             if frame.size.width > newSize.width {
                 newSize = frame.size
@@ -94,10 +95,17 @@ public extension UIView {
     }
     
     public func fadeInAnimation(toShow: Bool) {
-//        alpha = toShow ? 0.0 : 1.0
-//        UIView.animate(withDuration: 0.5, animations: { [unowned self] in
-//            self.alpha = toShow ? 1.0 : 0.0
-//        })
+        alpha = toShow ? 0.0 : 1.0
+        UIView.animate(withDuration: 0.5, animations: { [unowned self] in
+            self.alpha = toShow ? 1.0 : 0.0
+        })
+    }
+    
+    public func fadeInOutAnimation(handler: @escaping Handler) {
+        alpha = 0.0
+        UIView.animate(withDuration: 0.1, animations: { [unowned self] in self.alpha = 1.0 }, completion: { [unowned self] _ in
+            UIView.animate(withDuration: 0.1, delay: 0.1, options: .curveEaseIn, animations: { [unowned self] in self.alpha = 1.0 }, completion: handler)
+        })
     }
 }
 

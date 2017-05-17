@@ -156,7 +156,8 @@ extension RootViewController {
         guard canAnimate() else { return }
         let viewToAnimate = direction == .right ? rightArrowView : leftArrowView
         let originViewFrame = direction == .right ? _originRightArrowViewPosition : _originLeftArrowViewPosition
-        viewToAnimate!.animateBigger(from: originViewFrame, with: direction.oposite, firstHandler: { [unowned self] in self.animateAndUpdate(direction: direction) })
+        let firstHandler = { [unowned self] handler in self.animateAndUpdate(direction: direction, handler: handler) }
+        viewToAnimate!.animateBigger(from: originViewFrame, with: direction.oposite, firstHandler: firstHandler)
     }
 }
 
@@ -167,20 +168,20 @@ fileprivate extension RootViewController {
         let direction: Direction = viewBeingAnimated == rightArrowView ? .right : .left
         let frame = viewBeingAnimated == rightArrowView ? _originRightArrowViewPosition : _originLeftArrowViewPosition
         let complementaryView = viewBeingAnimated == rightArrowView ? rightArrowView : rightArrowView // TODO: update this
-        _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!) { [unowned self] _ in
-            self.animateAndUpdate(direction: direction)
+        let firstHandler = { [unowned self] handler in self.animateAndUpdate(direction: direction, handler: handler) } as! ((Handler) -> Void)
+        _ = viewBeingAnimated.updateAnimation(with: xTranslation, to: frame!, with: complementaryView!, firstHandler: firstHandler)
 //            complementaryView!.alpha = 1.0
 //            self._viewBeingAnimated!.frame = self._originRightArrowViewPosition // TODO: this should using the origin frame, from the view being animated
 //            self._viewBeingAnimated!.fadeInAnimation(toShow: true)
-        }
     }
     
-    fileprivate func animateAndUpdate(direction: Direction) {
+    fileprivate func animateAndUpdate(direction: Direction, handler: @escaping Handler) {
         let currentIndex = Int((_monthsViewModel?.index(of: (_pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
         let index = UInt(currentIndex + Int(direction.rawValue))
         let nextController = self.viewControllerAtIndex(index)!
         self._pageViewController?.setViewControllers([nextController], direction: .forward, animated: false, completion: nil)
         rightArrowView.isHidden = index == (_monthsViewModel!.elementsCount - 1)
+        animateText(with: direction, handler: handler)
 //        leftArrowView.isHidden = index == 0
     }
     
@@ -190,9 +191,11 @@ fileprivate extension RootViewController {
         return _monthsViewModel!.isValid(index)
     }
     
-//    fileprivate func animateText(with direction: Direction) {
-//        let view = direction == .left ? 
-//    }
+    fileprivate func animateText(with direction: Direction, handler: @escaping Handler) {
+        let view = direction == .left ? rightViewAlertLabel : rightViewAlertLabel // TODO: this should be updated to use leftlabel too
+        view!.fadeInOutAnimation(handler: handler)
+        
+    }
     
     fileprivate func canAnimate() -> Bool {
         guard rightArrowView.layer.animationKeys() == nil else { return false }
