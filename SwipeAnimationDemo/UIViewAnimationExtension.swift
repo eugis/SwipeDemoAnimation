@@ -76,7 +76,7 @@ public extension UIView {
         return screenRect.size.height * 2
     }
     
-    // TODO: Check and update this function's style
+    // TODO: Check and update this function's style - this function should not be use by now
     public func updateAnimation(with xTranslation: CGFloat, to frame: CGRect, with view: UIView, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
         guard xTranslation != 0 else { return }
 //        view.alpha = updatedAlpha(origin: frame.origin, xTranslation: xTranslation)
@@ -117,10 +117,11 @@ public extension UIView {
     
     public func testAnimation() {
         let animationGroup = CAAnimationGroup()
-        animationGroup.animations = [positionAnimation, cornerRadiusAnimation, sizeAnimation]
+        animationGroup.animations = [cornerRadiusAnimation, sizeAnimation]
         animationGroup.duration = 2.0
         animationGroup.fillMode = kCAFillModeForwards;
         animationGroup.isRemovedOnCompletion = false
+        animationGroup.delegate = self
         layer.add(animationGroup, forKey: "bigger")
     }
 }
@@ -161,6 +162,7 @@ fileprivate extension UIView {
     
 }
 
+// Animation to make view bigger
 fileprivate extension UIView {
     
     fileprivate var cornerRadiusAnimation: CAAnimation {
@@ -171,23 +173,6 @@ fileprivate extension UIView {
         return animation
     }
     
-    fileprivate var positionAnimation: CAAnimation {
-        let size = CABasicAnimation()
-        size.keyPath = "bounds.origin"
-        size.fromValue = frame.origin
-        size.toValue = CGPoint(x: -screenHeight/2, y: 0.0)
-        return size
-    }
-    
-    fileprivate var sizeAnimation: CAAnimation {
-        let size = CABasicAnimation()
-        size.keyPath = "bounds.size"
-        size.fromValue = frame.size
-        size.toValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
-        return size
-    }
-    
-    
     fileprivate var sizeAnimation: CAAnimation {
         let size = CABasicAnimation()
         size.keyPath = "bounds.size"
@@ -196,4 +181,53 @@ fileprivate extension UIView {
         return size
     }
 
+}
+
+// Animation to make view smaller
+fileprivate extension UIView {
+    
+    fileprivate var smallerCornerRadiusAnimation: CAAnimation {
+        let animation = CABasicAnimation();
+        animation.keyPath = "cornerRadius";
+        animation.fromValue = screenHeight/2
+        animation.toValue = 50.0
+        return animation
+    }
+    
+    fileprivate var smallerPositionAnimation: CAAnimation {
+        let animation = CABasicAnimation();
+        animation.keyPath = "position";
+        animation.duration = 1.0
+        animation.toValue = CGPoint(x: 0.0, y: screenHeight / 4)
+        return animation
+    }
+    
+    fileprivate var smallerSizeAnimation: CAAnimation {
+        let size = CABasicAnimation()
+        size.keyPath = "bounds.size"
+        size.fromValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
+        size.toValue = frame.size
+        return size
+    }
+    
+}
+
+extension UIView: CAAnimationDelegate {
+    
+    public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
+        guard flag else { return }
+        guard let isBigger = layer.animationKeys()?.contains("bigger") else { return }
+        if isBigger {
+            frame.origin = CGPoint(x: -50, y: screenHeight/2 - 50)
+            let animationGroup = CAAnimationGroup()
+            animationGroup.animations = [smallerCornerRadiusAnimation, smallerSizeAnimation]
+            animationGroup.duration = 10.0
+            animationGroup.delegate = self
+            animationGroup.fillMode = kCAFillModeForwards;
+            animationGroup.isRemovedOnCompletion = false
+            layer.add(animationGroup, forKey: "smaller")
+            layer.removeAnimation(forKey: "bigger")
+        }
+        
+    }
 }
