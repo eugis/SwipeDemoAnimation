@@ -12,7 +12,6 @@ import UIKit
 public enum Direction: CGFloat {
     case left = -1.0
     case right = 1.0
-    
     var oposite: Direction {
         switch self {
         case .left: return .right
@@ -20,6 +19,7 @@ public enum Direction: CGFloat {
         }
     }
 }
+var anOriginalFrame:CGRect = CGRect.zero
 
 public extension UIView {
     
@@ -176,6 +176,7 @@ fileprivate extension UIView {
     fileprivate var sizeAnimation: CAAnimation {
         let size = CABasicAnimation()
         size.keyPath = "bounds.size"
+        anOriginalFrame = frame
         size.fromValue = frame.size
         size.toValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
         return size
@@ -197,8 +198,7 @@ fileprivate extension UIView {
     fileprivate var smallerPositionAnimation: CAAnimation {
         let animation = CABasicAnimation();
         animation.keyPath = "position";
-        animation.duration = 1.0
-        animation.toValue = CGPoint(x: 0.0, y: screenHeight / 4)
+        animation.toValue = CGRect(x: -50, y: anOriginalFrame.origin.y, width: 100, height: 100).origin
         return animation
     }
     
@@ -206,9 +206,12 @@ fileprivate extension UIView {
         let size = CABasicAnimation()
         size.keyPath = "bounds.size"
         size.fromValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
-        size.toValue = frame.size
+        //store the original position and use that
+        size.toValue = CGSize(width: 100, height: 100)
         return size
     }
+
+    
     
 }
 
@@ -218,15 +221,17 @@ extension UIView: CAAnimationDelegate {
         guard flag else { return }
         guard let isBigger = layer.animationKeys()?.contains("bigger") else { return }
         if isBigger {
+            layer.removeAnimation(forKey: "bigger")
+
             frame.origin = CGPoint(x: -50, y: screenHeight/2 - 50)
             let animationGroup = CAAnimationGroup()
-            animationGroup.animations = [smallerCornerRadiusAnimation, smallerSizeAnimation]
-            animationGroup.duration = 10.0
+            animationGroup.animations = [smallerCornerRadiusAnimation, smallerSizeAnimation, smallerPositionAnimation]
+            animationGroup.duration = 2.0
             animationGroup.delegate = self
             animationGroup.fillMode = kCAFillModeForwards;
             animationGroup.isRemovedOnCompletion = false
             layer.add(animationGroup, forKey: "smaller")
-            layer.removeAnimation(forKey: "bigger")
+//            layer.removeAnimation(forKey: "bigger")
         }
         
     }
