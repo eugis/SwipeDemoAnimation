@@ -20,6 +20,7 @@ public enum Direction: CGFloat {
     }
 }
 var anOriginalFrame:CGRect = CGRect.zero
+fileprivate let scaleFactor: CGFloat = 30.0
 
 public extension UIView {
     
@@ -29,29 +30,30 @@ public extension UIView {
     public func animateBigger(from frame: CGRect? = .none, with direction: Direction, firstHandler: (() -> Void)? = .none, completionHandler: handler? = .none) {
         let originalFrame = frame ?? self.frame
 
-        UIView.animate(withDuration: 2.0,
+        UIView.animate(withDuration: 1.5,
                        animations: { [unowned self] in
-                            // TODO: this should be update if the logic is migrated to use beziers paths
-                            self.frame.origin = CGPoint(x: -self.screenHeight/2, y: 0.0)
-                            self.frame.size = CGSize(width: self.screenWidth + self.screenHeight, height: self.screenHeight)
+//                            // TODO: this should be update if the logic is migrated to use beziers paths
+//                            self.frame.origin = CGPoint(x: -self.screenHeight/2, y: 0.0)
+//                            self.frame.size = CGSize(width: self.screenWidth + self.screenHeight, height: self.screenHeight)
+                            self.transform = CGAffineTransform(scaleX: scaleFactor, y: scaleFactor)
                         },
                        completion: { [unowned self] _ in
-                            self.layer.borderWidth = 0.0
-                            self.layer.cornerRadius = 0.0
                             firstHandler?()
                             self.animateSmaller(upTo: originalFrame, with: direction, completionHandler: completionHandler)
                         })
     }
     
     public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: handler? ) {
-        let endPosition = getEndPosition(from: frame, with: direction)
-        UIView.animate(withDuration: 2.0,
+//        let endPosition = getEndPosition(from: frame, with: direction)
+        UIView.animate(withDuration: 1.5,
                        delay: 1.0,
                        animations: { [unowned self] in
-                            self.frame.origin = endPosition
-                            self.frame.size = frame.size
-                            self.layer.cornerRadius = self.frame.height / 2.0
-                            self.layer.borderColor = UIColor.white.cgColor
+                            self.center = CGPoint(x: 0 , y: 384)
+//                            self.frame.origin = endPosition
+//                            self.frame.size = frame.size
+//                            self.layer.cornerRadius = self.frame.height / 2.0
+//                            self.layer.borderColor = UIColor.white.cgColor
+                            self.transform = CGAffineTransform(scaleX: 1, y: 1)
                         },
                        completion: completionHandler)
     }
@@ -198,7 +200,7 @@ fileprivate extension UIView {
     fileprivate var smallerPositionAnimation: CAAnimation {
         let animation = CABasicAnimation();
         animation.keyPath = "position";
-        animation.toValue = CGRect(x: -50, y: anOriginalFrame.origin.y, width: 100, height: 100).origin
+        animation.toValue = CGRect(x: 0, y: 512.0, width: 100, height: 100).origin
         return animation
     }
     
@@ -211,28 +213,36 @@ fileprivate extension UIView {
         return size
     }
 
-    
-    
 }
 
 extension UIView: CAAnimationDelegate {
     
     public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         guard flag else { return }
-        guard let isBigger = layer.animationKeys()?.contains("bigger") else { return }
-        if isBigger {
-            layer.removeAnimation(forKey: "bigger")
-
-            frame.origin = CGPoint(x: -50, y: screenHeight/2 - 50)
-            let animationGroup = CAAnimationGroup()
-            animationGroup.animations = [smallerCornerRadiusAnimation, smallerSizeAnimation, smallerPositionAnimation]
-            animationGroup.duration = 2.0
-            animationGroup.delegate = self
-            animationGroup.fillMode = kCAFillModeForwards;
-            animationGroup.isRemovedOnCompletion = false
-            layer.add(animationGroup, forKey: "smaller")
-//            layer.removeAnimation(forKey: "bigger")
+        guard let animationKey = layer.animationKeys()?[0] else { return } // TODO: this works only if exist only ONE animation
+        switch animationKey {
+        case "bigger": animateDidStopBigger()
+        case "smaller": animateDidStopSmaller()
+        default: break
         }
+    }
+    
+    private func animateDidStopBigger() {
+        layer.removeAnimation(forKey: "bigger")
         
+        frame.origin = CGPoint(x: -50, y: screenHeight/2 - 50)
+        let animationGroup = CAAnimationGroup()
+        animationGroup.animations = [smallerCornerRadiusAnimation, smallerSizeAnimation, smallerPositionAnimation]
+        animationGroup.duration = 1.0
+        animationGroup.delegate = self
+        animationGroup.fillMode = kCAFillModeForwards;
+        animationGroup.isRemovedOnCompletion = false
+        layer.add(animationGroup, forKey: "smaller")
+    }
+    
+    // TODO: replace this approach to be able to work with two arrows
+    private func animateDidStopSmaller() {
+        layer.position = CGPoint(x: 0, y: 512) // TODO: update this, this values are from the original bound.
+        layer.removeAnimation(forKey: "smaller")
     }
 }
