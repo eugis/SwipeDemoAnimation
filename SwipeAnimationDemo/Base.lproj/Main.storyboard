@@ -30,7 +30,7 @@
                                     <constraint firstAttribute="width" constant="100" id="bSN-0x-MyM"/>
                                 </constraints>
                             </view>
-                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7rw-jB-AJb">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7rw-jB-AJb">
                                 <rect key="frame" x="-50" y="138" width="100" height="100"/>
                                 <color key="backgroundColor" red="1" green="0.2541619571" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>

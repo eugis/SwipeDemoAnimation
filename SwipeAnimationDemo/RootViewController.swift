@@ -39,7 +39,7 @@ class RootViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         _originRightArrowViewPosition = rightArrowView.frame
-        //            _originLeftArrowViewPosition = leftArrowView.frame
+        _originLeftArrowViewPosition = leftArrowView.frame
         self.rightViewAlertLabel.alpha = 1;
 
     }
@@ -51,7 +51,10 @@ class RootViewController: UIViewController {
         rightArrowView.layer.removeAllAnimations()
         rightArrowView.frame = _originRightArrowViewPosition
         rightArrowView.layer.cornerRadius = rightArrowView.frame.size.height / 2
-        //        leftArrowView = _originLeftArrowViewPosition
+        
+        leftArrowView.layer.removeAllAnimations()
+        leftArrowView.frame = _originLeftArrowViewPosition
+        leftArrowView.layer.cornerRadius = leftArrowView.frame.size.height / 2
     }
     
     @IBAction func animateRadius(_ sender: Any) {
@@ -69,6 +72,7 @@ extension RootViewController {
         _pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: .none)
         _pageViewController!.delegate = self
         
+        _monthsViewModel?.setCurrent(index: 0)
         let startingViewController: DataViewController = viewControllerAtIndex(0)!
         let viewControllers = [startingViewController]
         _pageViewController!.setViewControllers(viewControllers, direction: .forward, animated: false, completion: .none)
@@ -91,17 +95,19 @@ extension RootViewController {
         rightArrowView.layer.cornerRadius = rightArrowView.frame.height / 2
         rightArrowView.layer.borderColor = UIColor.white.cgColor
         rightArrowView.layer.borderWidth = 2.0
-        view.bringSubview(toFront: rightArrowView)
+        rightArrowView.isHidden = _monthsViewModel!.elementsCount == 0
+        rightArrowView.layer.zPosition = 0.5
         
-//        leftArrowView.layer.cornerRadius = rightArrowView.frame.height / 2
-//        leftArrowView.layer.borderColor = UIColor.white.cgColor
-//        leftArrowView.layer.borderWidth = 2.0
-//        view.bringSubview(toFront: leftArrowView)
+        
+        leftArrowView.layer.cornerRadius = rightArrowView.frame.height / 2
+        leftArrowView.layer.borderColor = UIColor.white.cgColor
+        leftArrowView.layer.borderWidth = 2.0
+        leftArrowView.isHidden = true // This is considreing the initialization of pageViewController to be at 0
+        leftArrowView.layer.zPosition = 0.5
         
         rightViewAlertLabel.text = _monthsViewModel?.alertMessage
         
-        view.bringSubview(toFront: restartButton)
-        view.bringSubview(toFront: animateRoundedButton)
+        restartButton.layer.zPosition = 0.5
     }
     
     internal func initializeGestures() {
@@ -110,10 +116,8 @@ extension RootViewController {
         let rTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(gesture:)) )
         rightArrowView.addGestureRecognizer(rTapGestureRecognizer)
         
-//        let lTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(gesture:)) )
-//        leftArrowView.addGestureRecognizer(lTapGestureRecognizer)
-        
-        //TODO: add swipe gesture
+        let lTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(gesture:)) )
+        leftArrowView.addGestureRecognizer(lTapGestureRecognizer)
     }
 }
 
@@ -131,8 +135,6 @@ fileprivate extension RootViewController {
     }
     
     func indexOfViewController(_ viewController: DataViewController) -> UInt? {
-        // Return the index of the given data view controller.
-        // For simplicity, this implementation uses a static array of model objects and the view controller stores the model object; you can therefore use the model object to identify the index.
         return _monthsViewModel?.index(of: viewController.dataObject)
     }
 }
@@ -179,7 +181,12 @@ extension RootViewController {
         guard canAnimate() else { return }
         let viewToAnimate = direction == .right ? rightArrowView : leftArrowView
         let originViewFrame = direction == .right ? _originRightArrowViewPosition : _originLeftArrowViewPosition
-        viewToAnimate!.animateBigger(from: originViewFrame, with: direction.oposite, firstHandler: { [unowned self] in self.animateAndUpdate(direction: direction) })
+        let complementaryFrame = direction == .right ? leftArrowView : rightArrowView
+        complementaryFrame?.layer.zPosition = 0.5
+        viewToAnimate!.animateBigger(from: originViewFrame,
+                                     with: direction.oposite,
+                                     firstHandler: { [unowned self] in self.animateAndUpdate(direction: direction) },
+                                     completionHandler: { [unowned self] _ in self.complementaryAnimation(for: viewToAnimate!) })
     }
 }
 
@@ -200,18 +207,17 @@ fileprivate extension RootViewController {
     }
     
     fileprivate func animateAndUpdate(direction: Direction) {
-        let currentIndex = Int((_monthsViewModel?.index(of: (_pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
-        let index = UInt(currentIndex + Int(direction.rawValue))
+        guard let currentIndex = _monthsViewModel?.currentIndex else { return } // This should never happen
+        let index = UInt(Int(currentIndex) + Int(direction.rawValue))
         let nextController = self.viewControllerAtIndex(index)!
+        _monthsViewModel?.setCurrent(index: index)
         self._pageViewController?.setViewControllers([nextController], direction: .forward, animated: false, completion: nil)
-        rightArrowView.isHidden = index == (_monthsViewModel!.elementsCount - 1)
         animateText(with: direction)
-//        leftArrowView.isHidden = index == 0
     }
     
     fileprivate func isValid(direction: Direction) -> Bool {
-        let currentIndex = Int((_monthsViewModel?.index(of: (_pageViewController?.viewControllers?[0] as! DataViewController).dataObject))!)
-        let index = UInt(currentIndex + Int(direction.rawValue))
+         guard let currentIndex = _monthsViewModel?.currentIndex else { return false } // This should never happen
+        let index = UInt(Int(currentIndex) + Int(direction.rawValue))
         return _monthsViewModel!.isValid(index)
     }
     
@@ -223,10 +229,19 @@ fileprivate extension RootViewController {
     
     fileprivate func canAnimate() -> Bool {
         guard rightArrowView.layer.animationKeys() == nil else { return false }
-//        guard leftArrowView.layer.animationKeys() == nil else { return false }
+        guard leftArrowView.layer.animationKeys() == nil else { return false }
         return true
     }
     
+    fileprivate func complementaryAnimation(for animatedView: UIView) {
+        let complementaryView = animatedView == rightArrowView ? leftArrowView : rightArrowView
+        let originFrame = animatedView == rightArrowView ? _originRightArrowViewPosition : _originLeftArrowViewPosition
+        complementaryView!.isHidden = false
+        animatedView.frame = originFrame!
+        if _monthsViewModel?.currentIndex != 0 && _monthsViewModel?.currentIndex != _monthsViewModel?.elementsCount {
+            animatedView.fadeInAnimation(toShow: true)
+        }
+    }
 }
 
 extension RootViewController: UIPageViewControllerDelegate, UIPageViewControllerDataSource {
@@ -238,4 +253,5 @@ extension RootViewController: UIPageViewControllerDelegate, UIPageViewController
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
         return .none
     }
+    
 }

@@ -21,6 +21,7 @@ import UIKit
 class MonthsViewModel: NSObject {
 
     fileprivate var _pageData: [String] = []
+    private var _currentIndex: UInt? = .none
 
     override init() {
         super.init()
@@ -49,6 +50,16 @@ class MonthsViewModel: NSObject {
     
     var alertMessage: String {
         return "Lorem ipsum dolor sit amet\n consectetur adipiscing elit sed do eiusmod tempor\n\n incididunt ut labore et dolore magna aliqua."
+    }
+    
+    var currentIndex: UInt? {
+        return _currentIndex
+    }
+
+    // This method will failed if the index given is out of range
+    func setCurrent(index: UInt) {
+        guard index < elementsCount else { fatalError("The index given is invalid") }
+        _currentIndex = index
     }
 }
 

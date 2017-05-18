@@ -32,9 +32,7 @@ public extension UIView {
 
         UIView.animate(withDuration: 1.5,
                        animations: { [unowned self] in
-//                            // TODO: this should be update if the logic is migrated to use beziers paths
-//                            self.frame.origin = CGPoint(x: -self.screenHeight/2, y: 0.0)
-//                            self.frame.size = CGSize(width: self.screenWidth + self.screenHeight, height: self.screenHeight)
+                            self.layer.zPosition = 0.9
                             self.transform = CGAffineTransform(scaleX: scaleFactor, y: scaleFactor)
                         },
                        completion: { [unowned self] _ in
@@ -44,15 +42,12 @@ public extension UIView {
     }
     
     public func animateSmaller(upTo frame: CGRect, with direction: Direction, completionHandler: handler? ) {
-//        let endPosition = getEndPosition(from: frame, with: direction)
+        
         UIView.animate(withDuration: 1.5,
                        delay: 1.0,
                        animations: { [unowned self] in
-                            self.center = CGPoint(x: 0 , y: 384)
-//                            self.frame.origin = endPosition
-//                            self.frame.size = frame.size
-//                            self.layer.cornerRadius = self.frame.height / 2.0
-//                            self.layer.borderColor = UIColor.white.cgColor
+                            let xCenter = frame.origin.x < 0 ? self.screenWidth : 0
+                            self.center = CGPoint(x: xCenter, y: self.screenHeight / 2)
                             self.transform = CGAffineTransform(scaleX: 1, y: 1)
                         },
                        completion: completionHandler)
@@ -75,7 +70,7 @@ public extension UIView {
     
     var screenHeight: CGFloat {
         let screenRect = UIScreen.main.bounds
-        return screenRect.size.height * 2
+        return screenRect.size.height
     }
     
     // TODO: Check and update this function's style - this function should not be use by now
@@ -107,24 +102,19 @@ public extension UIView {
     
     public func fadeInOutAnimation() {
         alpha = 0.0
+        layer.zPosition = 1.0
         UIView.animate(withDuration: 0.1,
                        animations: { [unowned self] in self.alpha = 1.0 },
                        completion: { [unowned self] _ in
-                            UIView.animate(withDuration: 0.1,
-                                           delay: 1.5,
+                            UIView.animate(withDuration: 0.2,
+                                           delay: 2.0,
                                            options: .curveEaseIn,
                                            animations: { [unowned self] in self.alpha = 0.0 })
         })
     }
     
     public func testAnimation() {
-        let animationGroup = CAAnimationGroup()
-        animationGroup.animations = [cornerRadiusAnimation, sizeAnimation]
-        animationGroup.duration = 2.0
-        animationGroup.fillMode = kCAFillModeForwards;
-        animationGroup.isRemovedOnCompletion = false
-        animationGroup.delegate = self
-        layer.add(animationGroup, forKey: "bigger")
+        
     }
 }
 
@@ -162,87 +152,4 @@ fileprivate extension UIView {
         return 1.0
     }
     
-}
-
-// Animation to make view bigger
-fileprivate extension UIView {
-    
-    fileprivate var cornerRadiusAnimation: CAAnimation {
-        let animation = CABasicAnimation();
-        animation.keyPath = "cornerRadius";
-        animation.fromValue = layer.cornerRadius
-        animation.toValue = screenHeight/2
-        return animation
-    }
-    
-    fileprivate var sizeAnimation: CAAnimation {
-        let size = CABasicAnimation()
-        size.keyPath = "bounds.size"
-        anOriginalFrame = frame
-        size.fromValue = frame.size
-        size.toValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
-        return size
-    }
-
-}
-
-// Animation to make view smaller
-fileprivate extension UIView {
-    
-    fileprivate var smallerCornerRadiusAnimation: CAAnimation {
-        let animation = CABasicAnimation();
-        animation.keyPath = "cornerRadius";
-        animation.fromValue = screenHeight/2
-        animation.toValue = 50.0
-        return animation
-    }
-    
-    fileprivate var smallerPositionAnimation: CAAnimation {
-        let animation = CABasicAnimation();
-        animation.keyPath = "position";
-        animation.toValue = CGRect(x: 0, y: 512.0, width: 100, height: 100).origin
-        return animation
-    }
-    
-    fileprivate var smallerSizeAnimation: CAAnimation {
-        let size = CABasicAnimation()
-        size.keyPath = "bounds.size"
-        size.fromValue = CGSize(width: screenWidth + screenHeight, height: screenHeight)
-        //store the original position and use that
-        size.toValue = CGSize(width: 100, height: 100)
-        return size
-    }
-
-}
-
-extension UIView: CAAnimationDelegate {
-    
-    public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
-        guard flag else { return }
-        guard let animationKey = layer.animationKeys()?[0] else { return } // TODO: this works only if exist only ONE animation
-        switch animationKey {
-        case "bigger": animateDidStopBigger()
-        case "smaller": animateDidStopSmaller()
-        default: break
-        }
-    }
-    
-    private func animateDidStopBigger() {
-        layer.removeAnimation(forKey: "bigger")
-        
-        frame.origin = CGPoint(x: -50, y: screenHeight/2 - 50)
-        let animationGroup = CAAnimationGroup()
-        animationGroup.animations = [smallerCornerRadiusAnimation, smallerSizeAnimation, smallerPositionAnimation]
-        animationGroup.duration = 1.0
-        animationGroup.delegate = self
-        animationGroup.fillMode = kCAFillModeForwards;
-        animationGroup.isRemovedOnCompletion = false
-        layer.add(animationGroup, forKey: "smaller")
-    }
-    
-    // TODO: replace this approach to be able to work with two arrows
-    private func animateDidStopSmaller() {
-        layer.position = CGPoint(x: 0, y: 512) // TODO: update this, this values are from the original bound.
-        layer.removeAnimation(forKey: "smaller")
-    }
 }
